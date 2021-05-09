@@ -63,6 +63,8 @@ module LnNodePicker
       json = File.read(channel_graph_file)
       stdout_str, stderr_str, status = Open3.capture3(cmd, stdin_data: json)
 
+      parsed_json = JSON.parse(json)
+
       if status.success?
         puts stderr_str
       else
@@ -70,6 +72,30 @@ module LnNodePicker
           "Have you installed required libraries? " \
           "Run `pip3 install PyMaxflow mpmath`"
       end
+    end
+
+    desc(
+      "calculate pleb node score of NODE_ID",
+      "Puts a scoring mechanism using @beeforbacon1's tips found in " \
+        "https://www.youtube.com/watch?v=qnj-ix45tVw. " \
+        "Since this is not a relative score, but a 1 to 10 where 1 is " \
+        "'a solid pleb node', and 10 the 'least pleb'"
+    )
+    option(:channel_graph_file, {
+      desc: "JSON file output of `lncli describegraph`",
+      required: true,
+    })
+    def pleb_score(node_id)
+      channel_graph_file = options[:channel_graph_file]
+      json = File.read(channel_graph_file)
+      parsed_json = JSON.parse(json)
+      graph = Graph.new(parsed_json)
+      node = graph.nodes.find{|n| n.pub_key == node_id}
+
+      fail "Unable to find node #{node_id}" if node.nil?
+
+      pleb_scorer = PlebScorer.new(node: node)
+      puts pleb_scorer.score
     end
 
   end

@@ -1,5 +1,6 @@
 require "bundler/setup"
 require "ln_node_picker"
+require "pry-byebug"
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

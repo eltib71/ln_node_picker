@@ -14,9 +14,15 @@ gem install ln_node_picker
 ## Usage
 
 
+See all commands:
+
 ```
 ln_node_picker help
+```
 
+Sample so you don't even have to download it:
+
+```
 ln_node_picker low_fee_routing_diversity \
   0280d41c21ba12e6f9096618e60f622bcbcdbd7426164f98b1db23e0018e8ed518 \
   --channel-graph-file=/path/to/1619521220-describegraph.json \

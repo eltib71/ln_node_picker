@@ -1,28 +1,28 @@
-# LnNodePicker
+# Lightning Network Node Picker
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/ln_node_picker`. To experiment with that code, run `bin/console` for an interactive prompt.
+Command line tools to help you pick nodes for your Lightning Network node. This takes tools and approaches from different people:
 
-TODO: Delete this and the text above, and describe your gem
+- https://github.com/ajpwahqgbi/lightning-tools
+- [beeforbacon1](https://twitter.com/beeforbacon1): [LN talk](https://www.youtube.com/watch?v=qnj-ix45tVw)
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
 ```ruby
-gem 'ln_node_picker'
+gem install ln_node_picker
 ```
-
-And then execute:
-
-    $ bundle install
-
-Or install it yourself as:
-
-    $ gem install ln_node_picker
 
 ## Usage
 
-TODO: Write usage instructions here
+
+```
+ln_node_picker help
+
+ln_node_picker low_fee_routing_diversity \
+  0280d41c21ba12e6f9096618e60f622bcbcdbd7426164f98b1db23e0018e8ed518 \
+  --channel-graph-file=/path/to/1619521220-describegraph.json \
+  --base-fee=1010 \
+  --per-million-fee=75
+```
 
 ## Development
 
@@ -32,8 +32,7 @@ To install this gem onto your local machine, run `bundle exec rake install`. To 
 
 ## Contributing
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/ln_node_picker.
-
+Bug reports and pull requests are welcome on GitHub at https://github.com/eltib71/ln_node_picker.
 
 ## License
 

@@ -12,6 +12,9 @@ require "ln_node_picker/models/edge"
 require "ln_node_picker/models/graph"
 require "ln_node_picker/models/one_ml_node"
 require "ln_node_picker/models/pleb_scorer"
+require "ln_node_picker/models/node_recommender/root_node_metric_set"
+require "ln_node_picker/models/node_recommender/peer_metric_set"
+require "ln_node_picker/models/node_recommender/metric_set"
 require "ln_node_picker/services/get_one_ml_node"
 
 module LnNodePicker

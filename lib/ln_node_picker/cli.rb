@@ -98,5 +98,51 @@ module LnNodePicker
       puts pleb_scorer.score
     end
 
+    desc(
+      "calculate pleb node scores of node_recommender output",
+      "uses `pleb_score` on the output of node_recommender for the top " \
+      "NODE_COUNT nodes with the highest peer_score."
+    )
+    option(:channel_graph_file, {
+      desc: "JSON file output of `lncli describegraph`",
+      required: true,
+    })
+    option(:node_recommender_file, {
+      desc: "JSON file output of low_fee_routing_diversity. If provided, " \
+        "the top 10 nodes will be fetched and its scores returned",
+      required: true,
+    })
+    option(:node_count, {
+      desc: "Number of nodes to get a score for",
+      default: 10,
+    })
+    def low_fee_routing_diversity_pleb_scores
+      channel_graph_file = options[:channel_graph_file]
+      node_recommender_file = options[:node_recommender_file]
+      node_count = options[:node_count]
+
+      channel_graph_file_json = File.read(channel_graph_file)
+      channel_graph_file_parsed_json = JSON.parse(channel_graph_file_json)
+
+      node_recommender_file_json = File.read(node_recommender_file)
+      node_recommender_file_parsed_json = JSON.parse(node_recommender_file_json)
+
+      metric_set = NodeRecommender::MetricSet.
+        new(node_recommender_file_parsed_json)
+
+      graph = Graph.new(channel_graph_file_parsed_json)
+
+      peer_metrics = metric_set.peer_metrics.sort_by { |m| -m.peer_score }
+      peer_metrics = peer_metrics[0..node_count]
+
+      hash = peer_metrics.each_with_object({}) do |pm, hash|
+        node = graph.nodes.find{|n| n.pub_key == pm.peer_id}
+        pleb_scorer = PlebScorer.new(node: node)
+        hash[node.pub_key] = pleb_scorer.score
+      end.sort_by { |k, v| -v }
+
+      puts hash.to_json
+    end
+
   end
 end

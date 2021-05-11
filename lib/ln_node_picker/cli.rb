@@ -1,4 +1,5 @@
 require "thor"
+require "fileutils"
 
 module LnNodePicker
   class CLI < Thor
@@ -43,12 +44,17 @@ module LnNodePicker
       type: :numeric,
       default: 15_000_000,
     })
+    option(:output_dir, {
+      desc: "Directory in which to write the output JSON. If file already " \
+        "exists in that directly, it will be skipped.",
+    })
     def low_fee_routing_diversity(node_id)
       channel_graph_file = options[:channel_graph_file]
       base_fee = options[:base_fee]
       per_million_fee = options[:per_million_fee]
       min_channels = options[:min_channels]
       min_capacity = options[:min_capacity]
+      output_dir = options[:output_dir]
 
       cmd = [
         "python3",
@@ -65,13 +71,31 @@ module LnNodePicker
 
       parsed_json = JSON.parse(json)
 
-      if status.success?
-        puts stderr_str
-      else
-        puts "Unable to run #{cmd}: #{stderr_str}. " \
+      if !status.success?
+        fail "Unable to run #{cmd}: #{stderr_str}. " \
           "Have you installed required libraries? " \
           "Run `pip3 install PyMaxflow mpmath`"
       end
+
+      if output_dir.nil?
+        puts stderr_str
+        return
+      end
+
+      FileUtils.mkdir_p(output_dir)
+
+      output_filename = {
+        node_id: node_id,
+        base_fee: base_fee,
+        per_million_fee: per_million_fee,
+        min_channels: min_channels,
+        min_capacity: min_capacity,
+      }.each_with_object([]) do |(k, v), arr|
+        arr << [k, v].join("-")
+      end.join("_") + ".json"
+
+      output_file_path = Pathname.new(output_dir).join(output_filename)
+      File.write(output_file_path, stderr_str)
     end
 
     desc(

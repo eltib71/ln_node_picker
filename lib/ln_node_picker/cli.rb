@@ -16,7 +16,9 @@ module LnNodePicker
         "Requires python3, pip3, and PyMaxflow mpmath installed."
     )
     option(:channel_graph_file, {
-      desc: "JSON file output of `lncli describegraph`",
+      desc: "JSON file output of `lncli describegraph`. " \
+        "You can pass /path/to/*.json to process all matching JSON files. " \
+        "If processing multiple files, better to use with `--output-dir`",
       required: true,
     })
     option(:base_fee, {
@@ -49,53 +51,55 @@ module LnNodePicker
         "exists in that directly, it will be skipped.",
     })
     def low_fee_routing_diversity(node_id)
-      channel_graph_file = options[:channel_graph_file]
+      channel_graph_files = Dir[options[:channel_graph_file]]
       base_fee = options[:base_fee]
       per_million_fee = options[:per_million_fee]
       min_channels = options[:min_channels]
       min_capacity = options[:min_capacity]
       output_dir = options[:output_dir]
 
-      cmd = [
-        "python3",
-        NODE_RECOMMENDER_PATH,
-        node_id,
-        base_fee,
-        per_million_fee,
-        min_channels,
-        min_capacity,
-      ].join(" ")
+      channel_graph_files.each do |channel_graph_file|
+        cmd = [
+          "python3",
+          NODE_RECOMMENDER_PATH,
+          node_id,
+          base_fee,
+          per_million_fee,
+          min_channels,
+          min_capacity,
+        ].join(" ")
 
-      json = File.read(channel_graph_file)
-      stdout_str, stderr_str, status = Open3.capture3(cmd, stdin_data: json)
+        json = File.read(channel_graph_file)
+        stdout_str, stderr_str, status = Open3.capture3(cmd, stdin_data: json)
 
-      parsed_json = JSON.parse(json)
+        parsed_json = JSON.parse(json)
 
-      if !status.success?
-        fail "Unable to run #{cmd}: #{stderr_str}. " \
-          "Have you installed required libraries? " \
-          "Run `pip3 install PyMaxflow mpmath`"
+        if !status.success?
+          fail "Unable to run #{cmd}: #{stderr_str}. " \
+            "Have you installed required libraries? " \
+            "Run `pip3 install PyMaxflow mpmath`"
+        end
+
+        if output_dir.nil?
+          puts stderr_str
+          return
+        end
+
+        FileUtils.mkdir_p(output_dir)
+
+        output_filename = {
+          node_id: node_id,
+          base_fee: base_fee,
+          per_million_fee: per_million_fee,
+          min_channels: min_channels,
+          min_capacity: min_capacity,
+        }.each_with_object([]) do |(k, v), arr|
+          arr << [k, v].join("-")
+        end.join("_") + ".json"
+
+        output_file_path = Pathname.new(output_dir).join(output_filename)
+        File.write(output_file_path, stderr_str)
       end
-
-      if output_dir.nil?
-        puts stderr_str
-        return
-      end
-
-      FileUtils.mkdir_p(output_dir)
-
-      output_filename = {
-        node_id: node_id,
-        base_fee: base_fee,
-        per_million_fee: per_million_fee,
-        min_channels: min_channels,
-        min_capacity: min_capacity,
-      }.each_with_object([]) do |(k, v), arr|
-        arr << [k, v].join("-")
-      end.join("_") + ".json"
-
-      output_file_path = Pathname.new(output_dir).join(output_filename)
-      File.write(output_file_path, stderr_str)
     end
 
     desc(

@@ -35,4 +35,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "thor", ">= 1.0"
   spec.add_runtime_dependency "dry-struct", ">= 1.0"
   spec.add_runtime_dependency "typhoeus", ">= 1.0"
+  spec.add_runtime_dependency "awesome_print"
+  spec.add_runtime_dependency "light-service"
 end

@@ -59,31 +59,15 @@ module LnNodePicker
       output_dir = options[:output_dir]
 
       channel_graph_files.each do |channel_graph_file|
-        cmd = [
-          "python3",
-          NODE_RECOMMENDER_PATH,
-          node_id,
-          base_fee,
-          per_million_fee,
-          min_channels,
-          min_capacity,
-        ].join(" ")
-
         json = File.read(channel_graph_file)
-        stdout_str, stderr_str, status = Open3.capture3(cmd, stdin_data: json)
-
-        parsed_json = JSON.parse(json)
-
-        if !status.success?
-          fail "Unable to run #{cmd}: #{stderr_str}. " \
-            "Have you installed required libraries? " \
-            "Run `pip3 install PyMaxflow mpmath`"
-        end
-
-        if output_dir.nil?
-          puts stderr_str
-          return
-        end
+        result = GenLowFeeRoutingDiversity.(
+          node_id: node_id,
+          channel_graph: json,
+          base_fee: base_fee,
+          per_million_fee: per_million_fee,
+          min_channels: min_channels,
+          min_capacity: min_capacity,
+        )
 
         FileUtils.mkdir_p(output_dir)
 
@@ -98,7 +82,7 @@ module LnNodePicker
         end.join("_") + ".json"
 
         output_file_path = Pathname.new(output_dir).join(output_filename)
-        File.write(output_file_path, stderr_str)
+        File.write(output_file_path, result.result)
       end
     end
 
@@ -142,6 +126,7 @@ module LnNodePicker
     })
     option(:node_count, {
       desc: "Number of nodes to get a score for",
+      type: :numeric,
       default: 10,
     })
     def low_fee_routing_diversity_pleb_scores
@@ -163,10 +148,10 @@ module LnNodePicker
       peer_metrics = metric_set.peer_metrics.sort_by { |m| -m.peer_score }
       peer_metrics = peer_metrics[0..node_count]
 
-      hash = peer_metrics.each_with_object({}) do |pm, hash|
+      hash = peer_metrics.each_with_object({}) do |pm, h|
         node = graph.nodes.find{|n| n.pub_key == pm.peer_id}
         pleb_scorer = PlebScorer.new(node: node)
-        hash[node.pub_key] = pleb_scorer.score
+        h[node.pub_key] = pleb_scorer.score
       end.sort_by { |k, v| -v }
 
       puts hash.to_json

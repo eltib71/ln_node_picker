@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "flatpickr": "^4.6.9",
+    "stimulus-flatpickr": "^1.4.0"
+  }
+}

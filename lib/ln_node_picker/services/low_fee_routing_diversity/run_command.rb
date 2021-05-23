@@ -7,7 +7,9 @@ module LnNodePicker
       promises :result
 
       executed do |c|
-        stdout_str, stderr_str, status = Open3.capture3(c.cmd, {
+        cmd = c.cmd
+
+        stdout_str, stderr_str, status = Open3.capture3(cmd, {
           stdin_data: c.channel_graph,
         })
 

@@ -3,8 +3,7 @@ module LnNodePicker
     class BuildCommand
 
       NODE_RECOMMENDER_PATH = Pathname.new(File.dirname(__FILE__)).
-        join("../../vendor/ajpwahqgbi/lightning-tools/channel-analysis").
-        join("node-recommender/node_recommender.py").freeze
+        join("../../vendor/ajpwahqgbi/node_recommender.py").freeze
 
       extend LightService::Action
       expects(
